@@ -9,9 +9,8 @@ const ManipulatorGrid: React.FC = () => {
     (state: RootState) => state.manipulator
   );
 
-  const cellSize = 50; // size of each grid cell in pixels
+  const cellSize = 50;
 
-  // Create a grid of cells
   const renderGrid = () => {
     const grid = [];
 
@@ -22,7 +21,6 @@ const ManipulatorGrid: React.FC = () => {
           (sample) => sample.position.x === x && sample.position.y === y && !sample.isPickedUp
         );
         
-        // Determine cell content and style
         let backgroundColor = theme.palette.background.paper;
         let content = null;
 

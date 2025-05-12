@@ -1,63 +1,84 @@
 import React from 'react';
-import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
-import { Provider, useSelector } from 'react-redux';
-import { store, RootState } from './store';
-import Layout from './components/Layout';
+import { useSelector } from 'react-redux';
+import { 
+  Container, 
+  Box, 
+  CssBaseline, 
+  ThemeProvider, 
+  createTheme, 
+  Stack,
+  Typography,
+  useMediaQuery
+} from '@mui/material';
 import LoginForm from './features/auth/LoginForm';
+import Layout from './components/Layout';
 import ManipulatorGrid from './features/manipulator/ManipulatorGrid';
 import CommandForm from './features/manipulator/CommandForm';
 import CommandHistory from './features/history/CommandHistory';
-import { Box, Stack, Typography } from '@mui/material';
+import { RootState } from './store';
 
-// Create a theme instance
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#1976d2',
+      main: '#2196f3',
     },
     secondary: {
-      main: '#dc004e',
+      main: '#ff9800',
     },
   },
 });
 
-// AppContent component that depends on authentication state
-const AppContent: React.FC = () => {
+const App: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
-
-  if (!user.isAuthenticated) {
-    return <LoginForm />;
-  }
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   return (
-    <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-      <Box sx={{ flex: 1 }}>
-        <Typography variant="h5" gutterBottom>
-          Стол с образцами
-        </Typography>
-        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
-          <ManipulatorGrid />
-        </Box>
-        <CommandForm />
-      </Box>
-      <Box sx={{ flex: 1 }}>
-        <CommandHistory />
-      </Box>
-    </Stack>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      {!user.isAuthenticated ? (
+        <Container maxWidth="sm" sx={{ mt: 8 }}>
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center' 
+            }}
+          >
+            <Typography component="h1" variant="h4" gutterBottom>
+              Система управления манипулятором
+            </Typography>
+            <LoginForm />
+          </Box>
+        </Container>
+      ) : (
+        <Layout>
+          <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+            <Box sx={{ flexGrow: 1 }}>
+              {isMobile ? (
+                <Stack spacing={2}>
+                  <ManipulatorGrid />
+                  <CommandForm />
+                  <CommandHistory />
+                </Stack>
+              ) : (
+                <Stack direction="row" spacing={2} alignItems="flex-start">
+                  <Box sx={{ width: '50%' }}>
+                    <Stack spacing={2}>
+                      <ManipulatorGrid />
+                      <CommandForm />
+                    </Stack>
+                  </Box>
+                  <Box sx={{ width: '50%' }}>
+                    <CommandHistory />
+                  </Box>
+                </Stack>
+              )}
+            </Box>
+          </Container>
+        </Layout>
+      )}
+    </ThemeProvider>
   );
 };
-
-function App() {
-  return (
-    <Provider store={store}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <Layout>
-          <AppContent />
-        </Layout>
-      </ThemeProvider>
-    </Provider>
-  );
-}
 
 export default App;

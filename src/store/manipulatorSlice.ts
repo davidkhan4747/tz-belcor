@@ -7,12 +7,12 @@ interface ManipulatorState {
   samples: Sample[];
   isHoldingSample: boolean;
   currentSampleId: string | null;
-  animationSpeed: number; // in milliseconds
+  animationSpeed: number;
   gridSize: { width: number; height: number };
 }
 
 const initialState: ManipulatorState = {
-  manipulatorPosition: { x: 0, y: 0 }, // top-left corner
+  manipulatorPosition: { x: 0, y: 0 },
   samples: Array.from({ length: 5 }, () => ({
     id: uuidv4(),
     position: {
@@ -23,7 +23,7 @@ const initialState: ManipulatorState = {
   })),
   isHoldingSample: false,
   currentSampleId: null,
-  animationSpeed: 500, // default animation speed (ms)
+  animationSpeed: 500,
   gridSize: { width: 10, height: 10 },
 };
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { 
   Button, 
@@ -9,7 +9,9 @@ import {
   Slider, 
   FormControl, 
   Snackbar,
-  Alert
+  Alert,
+  Divider,
+  Chip
 } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
@@ -34,9 +36,14 @@ interface CommandFormInputs {
 const CommandForm: React.FC = () => {
   const dispatch = useDispatch();
   const [optimizedCommand, setOptimizedCommand] = useState<string>('');
+  const [originalCommand, setOriginalCommand] = useState<string>('');
   const [isExecuting, setIsExecuting] = useState<boolean>(false);
   const [showSnackbar, setShowSnackbar] = useState<boolean>(false);
   
+  // Используем refs для надежного сохранения значений между обновлениями состояния
+  const optimizedCommandRef = useRef<string>('');
+  const originalCommandRef = useRef<string>('');
+
   const { animationSpeed, samples } = useSelector((state: RootState) => state.manipulator);
 
   const {
@@ -48,9 +55,8 @@ const CommandForm: React.FC = () => {
 
   const executeCommands = async (commands: Command[]) => {
     setIsExecuting(true);
-    const samplesBeforeState = [...samples];
+    const samplesBeforeState = JSON.parse(JSON.stringify(samples)); // Глубокая копия
     
-    // Execute each command with delay for animation
     for (const command of commands) {
       await new Promise((resolve) => setTimeout(resolve, animationSpeed));
       
@@ -76,14 +82,17 @@ const CommandForm: React.FC = () => {
       }
     }
     
-    // Get the final state after all commands
     setTimeout(() => {
-      const samplesAfterState = samples;
+      const samplesAfterState = JSON.parse(JSON.stringify(samples)); // Глубокая копия
       
-      // Add command to history
+      console.log("Сохранение в историю:", {
+        originalCommand: originalCommandRef.current,
+        optimizedCommand: optimizedCommandRef.current,
+      });
+      
       dispatch(addCommand({
-        originalCommand: commands.join(''),
-        optimizedCommand,
+        originalCommand: originalCommandRef.current,
+        optimizedCommand: optimizedCommandRef.current,
         samplesBeforeState,
         samplesAfterState,
       }));
@@ -96,18 +105,25 @@ const CommandForm: React.FC = () => {
   const onSubmit = (data: CommandFormInputs) => {
     const { commandString } = data;
     
-    // Optimize the command
+    // Сохраняем оригинальную команду
+    setOriginalCommand(commandString);
+    originalCommandRef.current = commandString;
+    
+    // Создаем и сохраняем оптимизированную команду
     const optimized = optimizeCommands(commandString);
     setOptimizedCommand(optimized);
+    optimizedCommandRef.current = optimized;
     
-    // Expand and execute
+    console.log("Команды созданы:", {
+      original: commandString,
+      optimized: optimized
+    });
+    
     const expanded = expandOptimizedCommand(optimized);
     const commands = parseCommands(expanded);
     
-    // Execute the commands
     executeCommands(commands);
     
-    // Reset form
     reset();
   };
 
@@ -121,6 +137,8 @@ const CommandForm: React.FC = () => {
 
   const handleReset = () => {
     dispatch(resetManipulator());
+    setOptimizedCommand('');
+    setOriginalCommand('');
   };
 
   return (
@@ -185,13 +203,29 @@ const CommandForm: React.FC = () => {
             Сбросить
           </Button>
         </Box>
-        
-        {optimizedCommand && (
-          <Typography sx={{ mt: 2 }}>
-            Оптимизированная команда: <strong>{optimizedCommand}</strong>
-          </Typography>
-        )}
       </Box>
+      
+      {(originalCommand || optimizedCommand) && (
+        <Box sx={{ mt: 3, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
+            Результат оптимизации:
+          </Typography>
+          
+          {originalCommand && (
+            <Box sx={{ mb: 1, display: 'flex', alignItems: 'center' }}>
+              <Chip label="Исходная" size="small" color="primary" sx={{ mr: 1 }} />
+              <Typography variant="body2">{originalCommand}</Typography>
+            </Box>
+          )}
+          
+          {optimizedCommand && (
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Chip label="Оптимизированная" size="small" color="secondary" sx={{ mr: 1 }} />
+              <Typography variant="body1" sx={{ fontWeight: 'bold' }}>{optimizedCommand}</Typography>
+            </Box>
+          )}
+        </Box>
+      )}
       
       <Snackbar 
         open={showSnackbar} 
